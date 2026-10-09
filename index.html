@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PESAWAT TEMPUR SDN Kalisari - Kelas 2</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #03031a;
+            font-family: 'Comic Sans MS', 'Chalkboard SE', 'Arial', sans-serif;
+        }
+        #login-screen, #game-screen {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        #game-screen {
+            display: none;
+        }
+        /* Login Screen Style */
+        .window-box {
+            background: linear-gradient(135deg, #1e1e57, #0b0b26);
+            border: 4px solid #00ffff;
+            border-radius: 20px;
+            padding: 30px;
+            width: 90%;
+            max-width: 450px;
+            text-align: center;
+            box-shadow: 0 0 25px rgba(0, 255, 255, 0.4);
+            color: #ffffff;
+            z-index: 10;
+        }
+        .logo-container img {
+            max-width: 120px;
+            height: auto;
+            margin-bottom: 15px;
+            filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.5));
+        }
+        h1 {
+            color: #ffeb3b;
+            font-size: 24px;
+            margin-bottom: 5px;
+            text-shadow: 2px 2px #ff5722;
+        }
+        h2 {
+            color: #00ffff;
+            font-size: 18px;
+            margin-top: 0;
+            margin-bottom: 25px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        label {
+            display: block;
+            font-size: 14px;
+            color: #a6e3e9;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"], input[type="date"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #34495e;
+            border-radius: 10px;
+            background-color: #fff;
+            color: #333;
+            font-size: 16px;
+            outline: none;
+        }
+        input:focus {
+            border-color: #00ffff;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+        }
+        .btn-start {
+            background: linear-gradient(180deg, #4caf50, #2e7d32);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 5px #1b5e20, 0 0 15px rgba(76, 175, 80, 0.4);
+            width: 100%;
+            transition: all 0.1s;
+        }
+        .btn-start:active {
+            transform: translateY(4px);
+            box-shadow: 0 1px #1b5e20;
+        }
+        /* Game Screen Style */
+        #canvas-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+        canvas {
+            background-color: #020215;
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        /* HUD overlay */
+        .hud {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            right: 15px;
+            display: flex;
+            justify-content: space-between;
+            color: #fff;
+            font-size: 16px;
+            font-weight: bold;
+            z-index: 5;
+            pointer-events: none;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 10px 15px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .hud-item span {
+            color: #ffeb3b;
+        }
+        /* Virtual Controller Fix */
+        #controls-container {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 30px;
+            z-index: 5;
+        }
+        .control-group {
+            display: grid;
+            grid-template-columns: repeat(3, 50px);
+            grid-template-rows: repeat(2, 50px);
+            gap: 10px;
+        }
+        .btn-ctrl {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid #00ffff;
+            color: white;
+            border-radius: 50%;
+            font-size: 20px;
+            font-weight: bold;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            width: 50px;
+            height: 50px;
+            touch-action: manipulation;
+        }
+        .btn-ctrl:active {
+            background: rgba(0, 255, 255, 0.5);
+        }
+        /* Quiz Modal Overlay */
+        #quiz-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 20;
+            display: none;
+        }
+        .quiz-box {
+            background: linear-gradient(135deg, #ffffff, #e3f2fd);
+            border: 6px solid #ff9800;
+            border-radius: 20px;
+            padding: 25px;
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+            box-shadow: 0 0 30px rgba(255, 152, 0, 0.6);
+            color: #333;
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes popIn {
+            0% { transform: scale(0.7); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .quiz-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 2px dashed #ff9800;
+            padding-bottom: 10px;
+        }
+        #quiz-level {
+            background: #ff9800;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        #quiz-timer {
+            font-size: 18px;
+            font-weight: bold;
+            color: #d32f2f;
+            background: #ffebee;
+            padding: 5px 12px;
+            border-radius: 10px;
+            border: 1px solid #d32f2f;
+        }
+        #question-text {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #0d47a1;
+            line-height: 1.4;
+        }
+        .options-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .option-btn {
+            background: #ffffff;
+            border: 2px solid #bbdefb;
+            border-radius: 12px;
+            padding: 14px;
+            font-size: 16px;
+            font-weight: bold;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #1a237e;
+            box-shadow: 0 3px #bbdefb;
+        }
+        .option-btn:hover:not([disabled]) {
+            background: #e3f2fd;
+            border-color: #2196f3;
+        }
+        .option-btn:active:not([disabled]) {
+            transform: translateY(2px);
+            box-shadow: 0 1px #bbdefb;
+        }
+        .option-btn.correct {
+            background: #c8e6c9 !important;
+            border-color: #4caf50 !important;
+            color: #1b5e20 !important;
+            box-shadow: 0 3px #4caf50 !important;
+        }
+        .option-btn.wrong {
+            background: #ffcdd2 !important;
+            border-color: #f44336 !important;
+            color: #b71c1c !important;
+            box-shadow: 0 3px #f44336 !important;
+        }
+        #next-btn {
+            background: linear-gradient(180deg, #2196f3, #1565c0);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 25px;
+            cursor: pointer;
+            box-shadow: 0 4px #0d47a1;
+            display: none;
+            width: 100%;
+        }
+        #next-btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px #0d47a1;
+        }
+        /* Game Over / Win Overlay */
+        #end-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(5, 5, 25, 0.95);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 30;
+            display: none;
+        }
+        .end-box {
+            background: linear-gradient(135deg, #1a237e, #000022);
+            border: 5px solid #ffeb3b;
+            border-radius: 25px;
+            padding: 40px 30px;
+            width: 90%;
+            max-width: 450px;
+            text-align: center;
+            color: white;
+            box-shadow: 0 0 35px rgba(255, 235, 59, 0.5);
+        }
+        .end-title {
+            font-size: 32px;
+            color: #ffeb3b;
+            margin-bottom: 20px;
+            text-shadow: 3px 3px #e65100;
+        }
+        .end-stats {
+            font-size: 18px;
+            margin-bottom: 10px;
+            color: #e0e0e0;
+        }
+        .end-stats strong {
+            color: #00ffff;
+            font-size: 22px;
+        }
+        .btn-restart {
+            margin-top: 25px;
+            background: linear-gradient(180deg, #ff9800, #e65100);
+            color: white;
+            border: none;
+            padding: 15px 35px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 5px #b71c1c;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="login-screen">
+        <div class="window-box">
+            <div class="logo-container">
+                <img src="https://drive.google.com/thumbnail?id=19gOxPGN2oPJgTlnVsftcvoPHrSe41CdR&sz=w300" alt="Logo SDN Kalisari" onerror="this.src='https://placehold.co/150x150/0b0b26/00ffff?text=SDN+KALISARI'">
+            </div>
+            <h1>PESAWAT TEMPUR</h1>
+            <h2>SDN Kalisari (Kelas 2)</h2>
+            <form id="identity-form" onsubmit="startGame(event)">
+                <div class="form-group">
+                    <label for="student-name">Nama Lengkap Siswa:</label>
+                    <input type="text" id="student-name" required placeholder="Ketik namamu di sini..." autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label for="student-dob">Tanggal Lahir:</label>
+                    <input type="date" id="student-dob" required>
+                </div>
+                <button type="submit" class="btn-start">🚀 MULAI TERBANG</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="game-screen">
+        <div id="canvas-container">
+            <canvas id="gameCanvas"></canvas>
+            <div class="hud">
+                <div class="hud-item">Pilot: <span id="hud-name">-</span></div>
+                <div class="hud-item">Soal: <span id="hud-progress">0/25</span></div>
+                <div class="hud-item">Skor: <span id="hud-score">0</span></div>
+            </div>
+            
+            <div id="controls-container">
+                <div class="control-group">
+                    <button class="btn-ctrl" style="grid-column: 1; grid-row: 2;" onmousedown="move('left')" onmouseup="stopMove('left')" ontouchstart="move('left')" ontouchend="stopMove('left')">◀</button>
+                    <button class="btn-ctrl" style="grid-column: 3; grid-row: 2;" onmousedown="move('right')" onmouseup="stopMove('right')" ontouchstart="move('right')" ontouchend="stopMove('right')">▶</button>
+                </div>
+                <div class="control-group">
+                    <button class="btn-ctrl" style="grid-column: 2; grid-row: 1;" onmousedown="move('up')" onmouseup="stopMove('up')" ontouchstart="move('up')" ontouchend="stopMove('up')">▲</button>
+                    <button class="btn-ctrl" style="grid-column: 2; grid-row: 2;" onmousedown="move('down')" onmouseup="stopMove('down')" ontouchstart="move('down')" ontouchend="stopMove('down')">▼</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="quiz-overlay">
+            <div class="quiz-box">
+                <div class="quiz-header">
+                    <div id="quiz-level">Level 1</div>
+                    <div id="quiz-timer">30s</div>
+                </div>
+                <div id="question-text">Memuat pertanyaan...</div>
+                <div class="options-grid" id="options-container">
+                </div>
+                <button id="next-btn" onclick="closeQuiz()">LANJUT TERBANG ➔</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="end-overlay">
+        <div class="end-box">
+            <div class="end-title" id="end-title">MISI SELESAI!</div>
+            <div class="end-stats">Nama Ksatria: <strong id="end-name">-</strong></div>
+            <div class="end-stats">Total Nilai Akhir: <strong id="end-score">0</strong></div>
+            <p id="end-comment" style="color: #ffeb3b; font-weight: bold; margin-top: 20px;"></p>
+            <button class="btn-restart" onclick="location.reload()">MAIN LAGI ↺</button>
+        </div>
+    </div>
+
+    <script>
+        /* ========================================================
+           SECURITY CONTROL (ANTI-CHEAT & COPY PASTE)
+           ======================================================== */
+        let gameActive = false;
+
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('copy', e => e.preventDefault());
+        document.addEventListener('paste', e => e.preventDefault());
+        document.addEventListener('selectstart', e => e.preventDefault());
+        document.addEventListener('dragstart', e => e.preventDefault());
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden' && gameActive) {
+                alert("🚨 PERINGATAN KEAMANAN!\nKamu terdeteksi meninggalkan aplikasi kuis. Nilai kamu dikembalikan ke 0 dan permainan diulang!");
+                location.reload();
+            }
+        });
+        window.addEventListener('blur', () => {
+            if (gameActive) {
+                alert("🚨 PERINGATAN KEAMANAN!\nJangan membuka jendela atau aplikasi lain. Nilai kamu di-reset!");
+                location.reload();
+            }
+        });
+
+        /* ========================================================
+           WEB AUDIO SYNTHESIZER (EFEK SUARA RETRO MANDIRI)
+           ======================================================== */
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playSound(type) {
+            if (!audioCtx) return;
+            try {
+                let osc = audioCtx.createOscillator();
+                let gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                let now = audioCtx.currentTime;
+
+                if (type === 'start') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(100, now);
+                    osc.frequency.exponentialRampToValueAtTime(350, now + 0.5);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.5);
+                    osc.start(now);
+                    osc.stop(now + 0.5);
+                } else if (type === 'hit') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(500, now);
+                    osc.frequency.setValueAtTime(800, now + 0.1);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.2);
+                    osc.start(now);
+                    osc.stop(now + 0.2);
+                } else if (type === 'correct') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(400, now);
+                    osc.frequency.setValueAtTime(600, now + 0.1);
+                    osc.frequency.setValueAtTime(900, now + 0.2);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.3);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                } else if (type === 'wrong') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(250, now);
+                    osc.frequency.linearRampToValueAtTime(100, now + 0.4);
+                    gain.gain.setValueAtTime(0.4, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.4);
+                    osc.start(now);
+                    osc.stop(now + 0.4);
+                } else if (type === 'bounce') {
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(120, now);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.15);
+                    osc.start(now);
+                    osc.stop(now + 0.15);
+                }
+            } catch (e) { console.log("Audio Error:", e); }
+        }
+
+        /* ========================================================
+           DATA BANK SOAL KELAS 2 SD (LITERASI & NUMERASI)
+           ======================================================== */
+        const bankSoal = [
+            // LEVEL 1: Paling Mudah
+            { level: 1, type: "num", q: "Hasil dari 15 + 12 adalah...", a: ["27", "25", "22"], c: "27" },
+            { level: 1, type: "lit", q: "Lawan kata dari 'PANAS' adalah...", a: ["Dingin", "Bersih", "Sejuk"], c: "Dingin" },
+            { level: 1, type: "num", q: "Bilangan yang tepat sebelum angka 50 adalah...", a: ["49", "51", "48"], c: "49" },
+            { level: 1, type: "lit", q: "Hewan yang suka melompat dan makan wortel adalah...", a: ["Kelinci", "Kucing", "Kambing"], c: "Kelinci" },
+            { level: 1, type: "num", q: "Ada 30 permen, dimakan adik 10. Sisa permen sekarang ada...", a: ["20 permen", "15 permen", "25 permen"], c: "20 permen" },
+
+            // LEVEL 2: Mudah
+            { level: 2, type: "lit", q: "Penulisan huruf kapital yang benar di bawah ini adalah...", a: ["Beni bermain di taman.", "beni bermain di taman.", "Beni Bermain Di Taman."], c: "Beni bermain di taman." },
+            { level: 2, type: "num", q: "Nilai tempat angka 7 pada bilangan 74 adalah...", a: ["Puluhan", "Satuan", "Ratusan"], c: "Puluhan" },
+            { level: 2, type: "lit", q: "Ibu memasak di...", a: ["Dapur", "Kamar mandi", "Halaman"], c: "Dapur" },
+            { level: 2, type: "num", q: "Urutan bilangan dari yang terkecil: 34, 12, 56 adalah...", a: ["12, 34, 56", "34, 12, 56", "12, 56, 34"], c: "12, 34, 56" },
+            { level: 2, type: "lit", q: "Suara harimau adalah...", a: ["Mengaum", "Menggonggong", "Mengeong"], c: "Mengaum" },
+
+            // LEVEL 3: Sedang
+            { level: 3, type: "num", q: "Bentuk penjumlahan berulang dari 3 x 4 adalah...", a: ["4 + 4 + 4", "3 + 3 + 3", "3 + 4"], c: "4 + 4 + 4" },
+            { level: 3, type: "lit", q: "Roni selalu bangun pagi agar tidak... sekolah.", a: ["Terlambat", "Cepat", "Malas"], c: "Terlambat" },
+            { level: 3, type: "num", q: "Hasil dari 45 - 18 adalah...", a: ["27", "37", "23"], c: "27" },
+            { level: 3, type: "lit", q: "Kalimat yang digunakan untuk menanyakan kabar adalah...", a: ["Bagaimana kabarmu?", "Wah, hebat sekali!", "Tolong ambilkan buku."], c: "Bagaimana kabarmu?" },
+            { level: 3, type: "num", q: "Jarum pendek menunjuk angka 9, jarum panjang menunjuk angka 12. Jam berapakah itu?", a: ["Jam 09.00", "Jam 12.00", "Jam 09.30"], c: "Jam 09.00" },
+
+            // LEVEL 4: Sulit
+            { level: 4, type: "lit", q: "Dika rajin membaca buku. Dika dijuluki sebagai...", a: ["Kutu buku", "Bintang kelas", "Rendah hati"], c: "Kutu buku" },
+            { level: 4, type: "num", q: "Hasil perkalian dari 5 x 4 adalah...", a: ["20", "25", "15"], c: "20" },
+            { level: 4, type: "lit", q: "Siti suka berbagi makanan kepada teman. Siti memiliki sifat...", a: ["Dermawan", "Sombong", "Kikir"], c: "Dermawan" },
+            { level: 4, type: "num", q: "Bangun datar yang memiliki 3 sudut dan 3 sisi dinamakan...", a: ["Segitiga", "Segiempat", "Lingkaran"], c: "Segitiga" },
+            { level: 4, type: "num", q: "Lanjutan pola bilangan berikut: 2, 4, 6, 8, ... adalah...", a: ["10", "9", "12"], c: "10" },
+
+            // LEVEL 5: Paling Sulit
+            { level: 5, type: "lit", q: "Ungkapan 'Rendah Hati' memiliki arti...", a: ["Tidak sombong", "Suka marah", "Penyayang"], c: "Tidak sombong" },
+            { level: 5, type: "num", q: "Ibu membeli 2 kardus mi. Setiap kardus berisi 10 bungkus. Berapa jumlah semua mi?", a: ["20 bungkus", "12 bungkus", "40 bungkus"], c: "20 bungkus" },
+            { level: 5, type: "lit", q: "Cerita yang tokoh utamanya adalah hewan disebut...", a: ["Fabel", "Mitos", "Puisi"], c: "Fabel" },
+            { level: 5, type: "num", q: "Hasil dari 80 - 25 + 10 adalah...", a: ["65", "55", "75"], c: "65" },
+            { level: 5, type: "lit", q: "Anak yang menyontek saat kuis kelas bertindak tidak...", a: ["Jujur", "Adil", "Pintar"], c: "Jujur" }
+        ];
+
+        let susunanSoal = [];
+        let indeksSoalSekarang = 0;
+        let totalSkor = 0;
+        let siswaNama = "";
+
+        function susunSoalUjian() {
+            susunanSoal = [];
+            for (let lvl = 1; lvl <= 5; lvl++) {
+                let poolLevel = bankSoal.filter(s => s.level === lvl);
+                poolLevel.sort(() => Math.random() - 0.5);
+                susunanSoal = susunanSoal.concat(poolLevel);
+            }
+        }
+
+        /* ========================================================
+           ENGINE UTAMA GAMEPLAY (CANVAS 2D)
+           ======================================================== */
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        let inputKeys = { up: false, down: false, left: false, right: false };
+        let player = { x: 0, y: 0, w: 36, h: 36, speed: 5 };
+        let stars = [];
+        let asteroids = [];
+        let quizTarget = { x: 0, y: 0, size: 40, pulse: 0, colorDir: 1 };
+
+        function initCanvasSize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            player.x = canvas.width / 2 - player.w / 2;
+            player.y = canvas.height - 150;
+
+            stars = [];
+            for (let i = 0; i < 60; i++) {
+                stars.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    size: Math.random() * 2 + 1,
+                    alpha: Math.random()
+                });
+            }
+
+            asteroids = [];
+            let rows = 4;
+            let cols = 5;
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    asteroids.push({
+                        x: (canvas.width / cols) * c + Math.random() * 40 + 20,
+                        y: 120 + (r * 100) + Math.random() * 20,
+                        radius: Math.random() * 15 + 15,
+                        speedX: (Math.random() - 0.5) * 2
+                    });
+                }
+            }
+
+            respawnQuizTarget();
+        }
+
+        function respawnQuizTarget() {
+            quizTarget.x = Math.random() * (canvas.width - 80) + 40;
+            quizTarget.y = 60;
+        }
+
+        window.addEventListener('keydown', e => {
+            if (!gameActive) return;
+            if (e.key === 'ArrowUp' || e.key.toLowerCase() === 'w') inputKeys.up = true;
+            if (e.key === 'ArrowDown' || e.key.toLowerCase() === 's') inputKeys.down = true;
+            if (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a') inputKeys.left = true;
+            if (e.key === 'ArrowRight' || e.key.toLowerCase() === 'd') inputKeys.right = true;
+        });
+
+        window.addEventListener('keyup', e => {
+            if (e.key === 'ArrowUp' || e.key.toLowerCase() === 'w') inputKeys.up = false;
+            if (e.key === 'ArrowDown' || e.key.toLowerCase() === 's') inputKeys.down = false;
+            if (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a') inputKeys.left = false;
+            if (e.key === 'ArrowRight' || e.key.toLowerCase() === 'd') inputKeys.right = false;
+        });
+
+        function move(dir) { inputKeys[dir] = true; }
+        function stopMove(dir) { inputKeys[dir] = false; }
+
+        function updateGame() {
+            if (!gameActive) return;
+
+            if (inputKeys.up && player.y > 0) player.y -= player.speed;
+            if (inputKeys.down && player.y < canvas.height - player.h) player.y += player.speed;
+            if (inputKeys.left && player.x > 0) player.x -= player.speed;
+            if (inputKeys.right && player.x < canvas.width - player.w) player.x += player.speed;
+
+            ctx.fillStyle = "#020215";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = "#ffffff";
+            stars.forEach(s => {
+                s.alpha += (Math.random() - 0.5) * 0.1;
+                if (s.alpha < 0.2) s.alpha = 0.2;
+                if (s.alpha > 1) s.alpha = 1;
+                ctx.globalAlpha = s.alpha;
+                ctx.fillRect(s.x, s.y, s.size, s.size);
+            });
+            ctx.globalAlpha = 1.0;
+
+            ctx.fillStyle = "#666677";
+            asteroids.forEach(ast => {
+                ast.x += ast.speedX;
+                if (ast.x - ast.radius < 0 || ast.x + ast.radius > canvas.width) {
+                    ast.speedX *= -1;
+                }
+
+                ctx.beginPath();
+                ctx.arc(ast.x, ast.y, ast.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = "#444455";
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                let distX = Math.abs(ast.x - (player.x + player.w/2));
+                let distY = Math.abs(ast.y - (player.y + player.h/2));
+
+                if (distX < (player.w/2 + ast.radius) && distY < (player.h/2 + ast.radius)) {
+                    player.y += 40;
+                    if (player.y > canvas.height - player.h) player.y = canvas.height - player.h;
+                    playSound('bounce');
+                }
+            });
+
+            quizTarget.pulse += 0.05 * quizTarget.colorDir;
+            if (quizTarget.pulse > 1 || quizTarget.pulse < 0) quizTarget.colorDir *= -1;
+            
+            let glowSize = quizTarget.size + (quizTarget.pulse * 15);
+            let gradient = ctx.createRadialGradient(quizTarget.x, quizTarget.y, 5, quizTarget.x, quizTarget.y, glowSize);
+            gradient.addColorStop(0, 'rgba(0, 255, 255, 0.8)');
+            gradient.addColorStop(0.5, 'rgba(156, 39, 176, 0.3)');
+            gradient.addColorStop(1, 'rgba(0,0,0,0)');
+            
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(quizTarget.x, quizTarget.y, glowSize, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.font = "30px Arial";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText("🔮", quizTarget.x, quizTarget.y);
+
+            ctx.save();
+            ctx.translate(player.x + player.w/2, player.y + player.h/2);
+            
+            ctx.fillStyle = "#ff5722";
+            ctx.beginPath();
+            ctx.moveTo(-10, 15);
+            ctx.lineTo(0, 15 + (Math.random() * 10));
+            ctx.lineTo(10, 15);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.fillStyle = "#00ffff";
+            ctx.strokeStyle = "#ffffff";
+            ctx.lineWidth = 2;
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = "#00ffff";
+            
+            ctx.beginPath();
+            ctx.moveTo(0, -18);
+            ctx.lineTo(18, 15);
+            ctx.lineTo(0, 6);
+            ctx.lineTo(-18, 15);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+            ctx.restore();
+
+            let pDistX = Math.abs(quizTarget.x - (player.x + player.w/2));
+            let pDistY = Math.abs(quizTarget.y - (player.y + player.h/2));
+            if (pDistX < (player.w/2 + 20) && pDistY < (player.h/2 + 20)) {
+                playSound('hit');
+                openQuiz();
+                return;
+            }
+
+            requestAnimationFrame(updateGame);
+        }
+
+        /* ========================================================
+           MEKANISME MODAL KUIS & PENGATURAN TIMER COUNTDOWN
+           ======================================================== */
+        let quizTimerInterval = null;
+        let sisaWaktu = 30;
+        let sudahMenjawab = false;
+
+        function openQuiz() {
+            inputKeys = { up: false, down: false, left: false, right: false };
+            
+            let dataSoal = susunanSoal[indeksSoalSekarang];
+            sudahMenjawab = false;
+
+            document.getElementById("quiz-level").innerText = "LEVEL " + dataSoal.level + " (" + (dataSoal.type === 'num' ? 'Numerasi' : 'Literasi') + ")";
+            document.getElementById("question-text").innerText = (indeksSoalSekarang + 1) + ". " + dataSoal.q;
+            document.getElementById("next-btn").style.display = "none";
+
+            let optionsContainer = document.getElementById("options-container");
+            optionsContainer.innerHTML = "";
+            
+            dataSoal.a.forEach(opsi => {
+                let btn = document.createElement("button");
+                btn.className = "option-btn";
+                btn.innerText = opsi;
+                btn.onclick = () => verifikasiJawaban(btn, opsi, dataSoal.c);
+                optionsContainer.appendChild(btn);
+            });
+
+            sisaWaktu = 30;
+            document.getElementById("quiz-timer").innerText = sisaWaktu + "s";
+            document.getElementById("quiz-overlay").style.display = "flex";
+
+            clearInterval(quizTimerInterval);
+            quizTimerInterval = setInterval(() => {
+                sisaWaktu--;
+                document.getElementById("quiz-timer").innerText = sisaWaktu + "s";
+                if (sisaWaktu <= 0) {
+                    clearInterval(quizTimerInterval);
+                    kunciWaktuHabis(dataSoal.c);
+                }
+            }, 1000);
+        }
+
+        function verifikasiJawaban(selectedBtn, jawabanSiswa, jawabanBenar) {
+            if (sudahMenjawab) return;
+            sudahMenjawab = true;
+            clearInterval(quizTimerInterval);
+
+            let semuaTombol = document.querySelectorAll(".option-btn");
+            semuaTombol.forEach(b => b.disabled = true);
+
+            if (jawabanSiswa === jawabanBenar) {
+                selectedBtn.classList.add("correct");
+                totalSkor += 4;
+                document.getElementById("hud-score").innerText = totalSkor;
+                playSound('correct');
+            } else {
+                selectedBtn.classList.add("wrong");
+                semuaTombol.forEach(b => {
+                    if (b.innerText === jawabanBenar) b.classList.add("correct");
+                });
+                playSound('wrong');
+            }
+
+            document.getElementById("next-btn").style.display = "block";
+        }
+
+        function kunciWaktuHabis(jawabanBenar) {
+            sudahMenjawab = true;
+            let semuaTombol = document.querySelectorAll(".option-btn");
+            semuaTombol.forEach(b => {
+                b.disabled = true;
+                if (b.innerText === jawabanBenar) b.classList.add("correct");
+            });
+            playSound('wrong');
+            document.getElementById("next-btn").style.display = "block";
+        }
+
+        function closeQuiz() {
+            document.getElementById("quiz-overlay").style.display = "none";
+            indeksSoalSekarang++;
+            document.getElementById("hud-progress").innerText = indeksSoalSekarang + "/25";
+
+            if (indeksSoalSekarang >= 25) {
+                endGame();
+            } else {
+                player.x = canvas.width / 2 - player.w / 2;
+                player.y = canvas.height - 150;
+                respawnQuizTarget();
+                requestAnimationFrame(updateGame);
+            }
+        }
+
+        /* ========================================================
+           SISTEM TRANSISI LAYAR JENDELA GAME
+           ======================================================== */
+        function startGame(event) {
+            event.preventDefault();
+            initAudio();
+
+            siswaNama = document.getElementById("student-name").value;
+            document.getElementById("hud-name").innerText = siswaNama;
+
+            document.getElementById("login-screen").style.display = "none";
+            document.getElementById("game-screen").style.display = "flex";
+
+            susunSoalUjian();
+            initCanvasSize();
+            
+            gameActive = true;
+            playSound('start');
+            requestAnimationFrame(updateGame);
+        }
+
+        function endGame() {
+            gameActive = false;
+            document.getElementById("game-screen").style.display = "none";
+            document.getElementById("end-overlay").style.display = "flex";
+
+            document.getElementById("end-name").innerText = siswaNama;
+            document.getElementById("end-score").innerText = totalSkor + " Poin";
+
+            let komentar = "";
+            if (totalSkor >= 80) komentar = "Luar Biasa! Kamu Pilot Kosmik Hebat Abad Ini! ⭐🚀";
+            else if (totalSkor >= 60) komentar = "Bagus Sekali! Belajar Lagi Agar Makin Hebat Keren! 🎯";
+            else komentar = "Tetap Semangat Ya, Ayo Terus Berlatih Membaca dan Berhitung! 📚";
+
+            document.getElementById("end-comment").innerText = komentar;
+        }
+
+        window.addEventListener('resize', () => {
+            if (gameActive) {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+        });
+    </script>
+</body>
+</html>
